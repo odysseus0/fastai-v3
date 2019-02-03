@@ -4,11 +4,11 @@ from starlette.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
 import uvicorn, aiohttp, asyncio
 from io import BytesIO
+from base64 import b64encode
 
 from fastai import *
 from fastai.vision import *
 
-export_file_url = 'https://www.dropbox.com/s/v6cuuvddq73d1e0/export.pkl?raw=1'
 export_file_name = 'export.pkl'
 
 classes = ['black', 'grizzly', 'teddys']
@@ -18,15 +18,7 @@ app = Starlette()
 app.add_middleware(CORSMiddleware, allow_origins=['*'], allow_headers=['X-Requested-With', 'Content-Type'])
 app.mount('/static', StaticFiles(directory='app/static'))
 
-async def download_file(url, dest):
-    if dest.exists(): return
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            data = await response.read()
-            with open(dest, 'wb') as f: f.write(data)
-
 async def setup_learner():
-    await download_file(export_file_url, path/export_file_name)
     try:
         learn = load_learner(path, export_file_name)
         return learn
@@ -52,9 +44,9 @@ def index(request):
 async def analyze(request):
     data = await request.form()
     img_bytes = await (data['file'].read())
-    img = open_image(BytesIO(img_bytes))
-    prediction = learn.predict(img)[0]
-    return JSONResponse({'result': str(prediction)})
+    # img = open_image(BytesIO(img_bytes))
+    # prediction = learn.predict(img)[0]
+    return JSONResponse({'result': b64encode(img_bytes).decode()})
 
 if __name__ == '__main__':
     if 'serve' in sys.argv: uvicorn.run(app=app, host='0.0.0.0', port=5042)
