@@ -3,11 +3,15 @@ from starlette.responses import HTMLResponse, JSONResponse
 from starlette.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
 import uvicorn, aiohttp, asyncio
+import sys
 from io import BytesIO
 from base64 import b64encode
+from PIL import Image
+from matplotlib import pyplot as plt
+from pathlib import Path
 
-from fastai import *
-from fastai.vision import *
+from fastai.basic_train import load_learner
+from fastai.vision import SegmentationItemList, SegmentationLabelList, open_mask, open_image
 
 export_file_name = 'export.pkl'
 
