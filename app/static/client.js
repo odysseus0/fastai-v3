@@ -19,12 +19,13 @@ const analyze = () => {
     el('analyze-button').innerHTML = 'Analyzing...';
     var xhr = new XMLHttpRequest();
     var loc = window.location
-    xhr.open('POST', `${loc.protocol}//${loc.hostname}:${loc.port}/analyze`, true);
+    const serverURL = `${loc.protocol}//${loc.hostname}:${loc.port}`
+    xhr.open('POST', `${serverURL}/analyze`, true);
     xhr.onerror = () => {alert (xhr.responseText);}
     xhr.onload = (e) => {
         if (xhr.readyState === 4) {
             var response = JSON.parse(e.target.responseText);
-            el('result-image').src = 'data:image/jpeg;base64,' + response['result'];
+            el('result-image').src = serverURL + '/' + response['resultURL'];
             el('result-image').className = '';
         }
         el('analyze-button').innerHTML = 'Analyze';
