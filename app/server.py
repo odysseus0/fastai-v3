@@ -13,9 +13,16 @@ from pathlib import Path
 from fastai.basic_train import load_learner
 from fastai.vision import SegmentationItemList, SegmentationLabelList, open_mask, open_image
 
+
 export_file_name = 'export.pkl'
 
-classes = ['black', 'grizzly', 'teddys']
+# Define the custom classes used by the learner
+class SegLabelListCustom(SegmentationLabelList):
+    def open(self, fn): return open_mask(fn, div=True)
+    
+class SegItemListCustom(SegmentationItemList):
+    _label_cls = SegLabelListCustom
+
 path = Path(__file__).parent
 
 app = Starlette()
@@ -48,9 +55,15 @@ def index(request):
 async def analyze(request):
     data = await request.form()
     img_bytes = await (data['file'].read())
-    # img = open_image(BytesIO(img_bytes))
-    # prediction = learn.predict(img)[0]
-    return JSONResponse({'result': b64encode(img_bytes).decode()})
+    img = open_image(BytesIO(img_bytes))
+
+    # Run inference on the trained learner and base64 encode the result
+    fig, ax = plt.subplots()
+    img.show(ax, y=learn.predict(img)[0], alpha=0.6)
+    resultPath = path/'static/result.png'
+    fig.savefig(resultPath, bbox_inches='tight', pad_inches=0, transparent=True)
+
+    return JSONResponse({'resultURL': 'static/' + resultPath.name})
 
 if __name__ == '__main__':
     if 'serve' in sys.argv: uvicorn.run(app=app, host='0.0.0.0', port=5042)
