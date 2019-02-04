@@ -13,7 +13,7 @@ from pathlib import Path
 from fastai.basic_train import load_learner
 from fastai.vision import SegmentationItemList, SegmentationLabelList, open_mask, open_image
 
-
+export_file_url = 'https://www.dropbox.com/s/6rwibf603t4lq0d/export.pkl?dl=0'
 export_file_name = 'export.pkl'
 
 # Define the custom classes used by the learner
@@ -29,7 +29,15 @@ app = Starlette()
 app.add_middleware(CORSMiddleware, allow_origins=['*'], allow_headers=['X-Requested-With', 'Content-Type'])
 app.mount('/static', StaticFiles(directory='app/static'))
 
+async def download_file(url, dest):
+    if dest.exists(): return
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            data = await response.read()
+            with open(dest, 'wb') as f: f.write(data)
+
 async def setup_learner():
+    await download_file(export_file_url, path/export_file_name)
     try:
         learn = load_learner(path, export_file_name)
         return learn
